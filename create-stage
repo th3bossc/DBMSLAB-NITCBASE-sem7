@@ -1,0 +1,10 @@
+#!  /bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Provide stage number"
+    exit
+fi
+
+
+echo "creating STAGE_$1"
+
