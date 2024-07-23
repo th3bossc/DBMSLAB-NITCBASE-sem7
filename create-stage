@@ -7,4 +7,6 @@ fi
 
 
 echo "creating STAGE_$1"
+git branch STAGE_$1
+git checkout STAGE_$1
 
