@@ -1,0 +1,17 @@
+#!  /bin/bash
+
+function on_close() {
+    docker kill nitcbase
+}
+
+trap on_close SIGINT
+trap on_close SIGTERM
+trap on_close SIGQUIT
+trap on_close SIGHUP
+
+docker start nitcbase # if the container instance is not already running
+
+(
+    trap on_close EXIT
+    docker exec -it nitcbase /bin/bash # to get a bash shell inside the container
+)
