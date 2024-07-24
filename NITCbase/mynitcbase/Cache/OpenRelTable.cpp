@@ -28,7 +28,7 @@ OpenRelTable::OpenRelTable() {
 
     RecBuffer relCatBlock(RELCAT_BLOCK);
     Attribute relCatRecord[RELCAT_NO_ATTRS];
-    for (int i = RELCAT_RELID; i <= ATTRCAT_RELID; i++) {
+    for (int i = 0; i <= 1; i++) { // 0->relCat, 1 -> attrCat
         relCatBlock.getRecord(relCatRecord, i);
 
         struct RelCacheEntry relCacheEntry;
@@ -69,13 +69,25 @@ OpenRelTable::OpenRelTable() {
     }
     AttrCacheTable::attrCache[ATTRCAT_RELID] = attrCatListHead;
 
+    // exercise
+    // auto studentsListHead = createList(4);
+    // attrCacheEntry = studentsListHead;
+    // for (int i = 12; i < 16; i++) {
+    //     attrCatBlock.getRecord(attrCatRecord, i);
+    //     AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &(attrCacheEntry->attrCatEntry));
+    //     (attrCacheEntry->recId).block = ATTRCAT_BLOCK;
+    //     (attrCacheEntry->recId).slot = i;
+
+    //     attrCacheEntry = attrCacheEntry->next;
+    // }
+    // AttrCacheTable::attrCache[2] = studentsListHead;
+
 }
 
 
 OpenRelTable::~OpenRelTable() {
-    free(RelCacheTable::relCache[RELCAT_RELID]);
-    free(RelCacheTable::relCache[ATTRCAT_RELID]);
-
-    clearList(AttrCacheTable::attrCache[RELCAT_RELID]);
-    clearList(AttrCacheTable::attrCache[ATTRCAT_RELID]);
+    for (int i = 0; i < MAX_OPEN; i++)
+        free(RelCacheTable::relCache[i]);
+    for (int i = 0; i < MAX_OPEN; i++)
+        clearList(AttrCacheTable::attrCache[i]);
 }
