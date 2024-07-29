@@ -1,6 +1,7 @@
 #include "BlockBuffer.h"
 #include <cstdlib>
 #include <cstring>
+#include <stdio.h>
 
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
     int diff;
@@ -58,7 +59,6 @@ int RecBuffer::getRecord(union Attribute* rec, int slotNum) {
     // index -> recordSize*slotNum
     int recordSize = attrCount * ATTR_SIZE;
     unsigned char* slotPointer = bufferPtr + 32 + slotCount + recordSize*slotNum;
-
     memcpy(rec, slotPointer, recordSize);
     return SUCCESS;
 }

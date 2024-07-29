@@ -1,5 +1,4 @@
 #include "RelCacheTable.h"
-#include <stdio.h>
 #include <cstring>
 
 RelCacheEntry* RelCacheTable::relCache[MAX_OPEN];
