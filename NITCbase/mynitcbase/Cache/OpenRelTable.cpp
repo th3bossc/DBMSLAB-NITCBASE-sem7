@@ -81,7 +81,7 @@ OpenRelTable::OpenRelTable() {
 
 int OpenRelTable::getRelId(char relName[ATTR_SIZE]) {
     for (int i = 0; i < MAX_OPEN; i++) {
-        if (!tableMetaInfo[i].free && (relName, tableMetaInfo[i].relName) == 0)
+        if (!tableMetaInfo[i].free && strcmp(relName, tableMetaInfo[i].relName) == 0)
             return i;
     }
 
