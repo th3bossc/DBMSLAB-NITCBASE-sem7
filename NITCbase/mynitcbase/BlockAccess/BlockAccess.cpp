@@ -1,6 +1,6 @@
 #include "BlockAccess.h"
 #include <cstring>
-
+#include <stdio.h>
 
 RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, int op) {
     RecId prevRecId;
@@ -80,6 +80,7 @@ int BlockAccess::renameRelation(char oldName[ATTR_SIZE], char newName[ATTR_SIZE]
 
     RelCacheTable::resetSearchIndex(RELCAT_RELID);
 
+
     recId = BlockAccess::linearSearch(RELCAT_RELID, (char*)RELCAT_ATTR_RELNAME, oldRelationName, EQ);
 
     if (recId.block == -1 && recId.slot == -1)
@@ -90,35 +91,39 @@ int BlockAccess::renameRelation(char oldName[ATTR_SIZE], char newName[ATTR_SIZE]
     Attribute record[RELCAT_NO_ATTRS];
     recBuffer.getRecord(record, recId.slot);
 
-    memcpy(record[RELCAT_REL_NAME_INDEX].sVal, newName, ATTR_SIZE);
+    memcpy(&record[RELCAT_REL_NAME_INDEX], &newRelationName, ATTR_SIZE);
 
     recBuffer.setRecord(record, recId.slot);
 
     RelCacheTable::resetSearchIndex(ATTRCAT_RELID);
 
-    for (int i = 0; i < ATTRCAT_NO_ATTRS; i++) {
+    while (true) {
         RecId attrEntryId = BlockAccess::linearSearch(ATTRCAT_RELID, (char*)ATTRCAT_ATTR_RELNAME, oldRelationName, EQ);
+
+        if (attrEntryId.block == -1 && attrEntryId.slot == -1)
+            break;
 
         RecBuffer attrCatRecBuffer(attrEntryId.block);
 
         Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
         attrCatRecBuffer.getRecord(attrCatRecord, attrEntryId.slot);
 
-        memcpy(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal, newName, ATTR_SIZE);
+        memcpy(&attrCatRecord[ATTRCAT_REL_NAME_INDEX], &newRelationName, ATTR_SIZE);
 
-        attrCatRecBuffer.setRecord(record, attrEntryId.slot);
+        attrCatRecBuffer.setRecord(attrCatRecord, attrEntryId.slot);
     }
 
     return SUCCESS;
 }
 
 int BlockAccess::renameAttribute(char relName[ATTR_SIZE], char oldName[ATTR_SIZE], char newName[ATTR_SIZE]) {
+
     RelCacheTable::resetSearchIndex(RELCAT_RELID);
 
     Attribute relNameAttr;
     memcpy(relNameAttr.sVal, relName, ATTR_SIZE);
 
-    RecId recId = BlockAccess::linearSearch(RELCAT_RELID, (char*)RELCAT_RELNAME, relNameAttr, EQ);
+    RecId recId = BlockAccess::linearSearch(RELCAT_RELID, (char*)RELCAT_ATTR_RELNAME, relNameAttr, EQ);
 
     if (recId.block == -1 && recId.slot == -1) 
         return E_RELNOTEXIST;

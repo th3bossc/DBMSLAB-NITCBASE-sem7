@@ -80,7 +80,7 @@ int StaticBuffer::setDirtyBit(int blockNum) {
 
     int targetBuffer = -1;
     for (int i = 0; i < BUFFER_CAPACITY; i++) {
-        if (metainfo[i].free && metainfo[i].blockNum == blockNum) {
+        if (!metainfo[i].free && metainfo[i].blockNum == blockNum) {
             targetBuffer = i;
             break;
         }
