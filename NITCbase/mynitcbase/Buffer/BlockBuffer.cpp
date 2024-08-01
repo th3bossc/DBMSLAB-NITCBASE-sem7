@@ -31,11 +31,18 @@ BlockBuffer::BlockBuffer(char blockType) {
     else if (blockType == 'L')
         blockTypeNum = IND_LEAF;
     else 
+        blockTypeNum = UNUSED_BLK;
+    int blockNum = getFreeBlock(blockTypeNum);
+
+    this->blockNum = blockNum;
+    if (blockNum < 0 || blockNum >= DISK_BLOCKS)
         return;
-    int ret = getFreeBlock(blockTypeNum);
 }
 
+
 RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
+
+RecBuffer::RecBuffer() : BlockBuffer::BlockBuffer('R') {}
 
 int BlockBuffer::getHeader(struct HeadInfo* head) {
     unsigned char* bufferPtr;
@@ -233,6 +240,7 @@ int BlockBuffer::getFreeBlock(int blockType) {
 
     this->setHeader(&header);
     this->setBlockType(blockType);
+
 
     return freeBlock;
 }
