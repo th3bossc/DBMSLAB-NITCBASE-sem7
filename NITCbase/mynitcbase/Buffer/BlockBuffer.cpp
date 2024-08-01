@@ -22,6 +22,19 @@ BlockBuffer::BlockBuffer(int blockNum) {
     this->blockNum = blockNum;
 }
 
+BlockBuffer::BlockBuffer(char blockType) {
+    int blockTypeNum;
+    if (blockType == 'R')
+        blockTypeNum = REC;
+    else if (blockType == 'I')
+        blockTypeNum = IND_INTERNAL;
+    else if (blockType == 'L')
+        blockTypeNum = IND_LEAF;
+    else 
+        return;
+    int ret = getFreeBlock(blockTypeNum);
+}
+
 RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
 
 int BlockBuffer::getHeader(struct HeadInfo* head) {
@@ -31,13 +44,33 @@ int BlockBuffer::getHeader(struct HeadInfo* head) {
     if (ret != SUCCESS)
         return ret;
 
-    memcpy(&head->numSlots, bufferPtr + 24, 4);
-    memcpy(&head->numEntries, bufferPtr + 16, 4);
-    memcpy(&head->numAttrs, bufferPtr + 20, 4);
-    memcpy(&head->lblock, bufferPtr + 8, 4);
-    memcpy(&head->rblock, bufferPtr + 12, 4);
+    HeadInfo* header = (HeadInfo*) bufferPtr;
+
+    head->numSlots = header->numSlots;
+    head->numEntries = header->numEntries;
+    head->numAttrs = header->numAttrs;
+    head->lblock = header->lblock;
+    head->rblock = header->rblock;
 
     return SUCCESS;
+}
+
+int BlockBuffer::setHeader(struct HeadInfo* head) {
+    unsigned char* bufferPtr;
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+
+    if (ret != SUCCESS)
+        return ret;
+
+    HeadInfo* header = (HeadInfo*) bufferPtr;
+
+    header->numSlots = head->numSlots;
+    header->numEntries = head->numEntries;
+    header->numAttrs = head->numAttrs;
+    header->lblock = head->lblock;
+    header->rblock = head->rblock;
+
+    return StaticBuffer::setDirtyBit(this->blockNum);
 }
 
 
@@ -110,6 +143,27 @@ int RecBuffer::getSlotMap(unsigned char* slotMap) {
 
 }
 
+int RecBuffer::setSlotMap(unsigned char* slotMap) {
+    unsigned char* bufferPtr;
+
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+
+    if (ret != SUCCESS)
+        return ret;
+
+    struct HeadInfo head;
+    getHeader(&head);
+
+    int slotCount = head.numSlots;
+
+    unsigned char* slotMapInBuffer = bufferPtr + HEADER_SIZE;
+
+    memcpy(slotMapInBuffer, slotMap, slotCount);
+
+    return StaticBuffer::setDirtyBit(this->blockNum);
+
+}
+
 int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char** bufferPtr) {
     int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
 
@@ -133,4 +187,52 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char** bufferPtr) {
     *bufferPtr = StaticBuffer::blocks[bufferNum];
 
     return SUCCESS;
+}
+
+int BlockBuffer::getBlockNum() {
+    return this->blockNum;  
+}
+
+int BlockBuffer::setBlockType(int blockType) {
+    unsigned char* bufferPtr;
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+
+    if (ret != SUCCESS)
+        return ret;
+
+    *((int32_t*)bufferPtr) = blockType;
+
+    StaticBuffer::blockAllocMap[this->blockNum] = blockType;
+
+    return StaticBuffer::setDirtyBit(this->blockNum);
+}
+
+int BlockBuffer::getFreeBlock(int blockType) {
+    int freeBlock = -1;
+    for (int i = 0; i < DISK_BLOCKS; i++) {
+        if (StaticBuffer::blockAllocMap[i] == UNUSED_BLK) {
+            freeBlock = i;
+            break;
+        }
+    }
+
+    if (freeBlock == -1)
+        return E_DISKFULL;
+
+    this->blockNum = freeBlock;
+
+    int freeBuffer = StaticBuffer::getFreeBuffer(freeBlock);
+
+    HeadInfo header;
+    header.pblock = -1;
+    header.lblock = -1;
+    header.rblock = -1;
+    header.numEntries = 0;
+    header.numAttrs = 0;
+    header.numSlots = 0;
+
+    this->setHeader(&header);
+    this->setBlockType(blockType);
+
+    return freeBlock;
 }
