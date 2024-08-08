@@ -244,3 +244,20 @@ int BlockBuffer::getFreeBlock(int blockType) {
 
     return freeBlock;
 }
+
+void BlockBuffer::releaseBlock() {
+    if (blockNum < 0 || blockNum >= DISK_BLOCKS || StaticBuffer::blockAllocMap[blockNum] == UNUSED_BLK)
+        return;
+
+
+    int bufferNum = StaticBuffer::getBufferNum(blockNum);
+
+    if (bufferNum == E_BLOCKNOTINBUFFER)
+        return;
+
+    StaticBuffer::metainfo[bufferNum].free = true;
+
+    StaticBuffer::blockAllocMap[blockNum] = UNUSED_BLK;
+
+    this->blockNum = INVALID_BLOCKNUM;
+}
