@@ -410,3 +410,54 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
     return SUCCESS;
 
 }
+
+int BlockAccess::project(int relId, Attribute* record) {
+    int block, slot;
+    RecId prevRecId;
+
+    RelCacheTable::getSearchIndex(relId, &prevRecId);
+
+    if (prevRecId.block == -1 && prevRecId.slot == -1) {
+        RelCatEntry relCatEntry;
+        RelCacheTable::getRelCatEntry(relId, &relCatEntry);
+
+        block = relCatEntry.firstBlk;
+        slot = 0;
+    }
+    else {
+        block = prevRecId.block;
+        slot = prevRecId.slot+1;
+    }
+
+    while (block != -1) {
+        RecBuffer currentBlock(block);
+
+        HeadInfo currentHeader;
+        currentBlock.getHeader(&currentHeader);
+
+        unsigned char currentSlotMap[currentHeader.numSlots];
+        currentBlock.getSlotMap(currentSlotMap);
+
+        if (slot >= currentHeader.numSlots) {
+            block = currentHeader.rblock;
+            slot = 0;
+        }
+        else if (currentSlotMap[slot] == SLOT_UNOCCUPIED) {
+            slot++;
+        }
+        else {
+            break;
+        }
+    }
+
+    if (block == -1)
+        return E_NOTFOUND;
+
+    RecId nextRecId = {block, slot};
+    RelCacheTable::setSearchIndex(relId, &nextRecId);
+
+    RecBuffer targetBlock(block);
+    targetBlock.getRecord(record, slot);
+
+    return SUCCESS;
+}
