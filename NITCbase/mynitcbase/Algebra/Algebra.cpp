@@ -212,7 +212,9 @@ int Algebra::project(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], int tar_
         attrTypes[i] = attrCatEntry.attrType;
     }
 
-    Schema::createRel(targetRel, tar_nAttrs, tar_Attrs, attrTypes);
+    int ret = Schema::createRel(targetRel, tar_nAttrs, tar_Attrs, attrTypes);
+    if (ret != SUCCESS)
+        return ret;
 
     int tarRelId = OpenRelTable::openRel(targetRel);
 
