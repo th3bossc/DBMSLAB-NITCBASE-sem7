@@ -274,8 +274,19 @@ int BlockAccess::insert(int relId, Attribute* record) {
 
 
 int BlockAccess::search(int relId, Attribute* record, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
-    
-    RecId recId = linearSearch(relId, attrName, attrVal, op);
+    RecId recId;
+
+    AttrCatEntry attrCatBuf;
+    int ret = AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatBuf);
+    if (ret != SUCCESS)
+        return ret;
+
+    int rootBlock = attrCatBuf.rootBlock;
+
+    if (rootBlock == -1)
+        recId = linearSearch(relId, attrName, attrVal, op);
+    else
+        recId = BPlusTree::bPlusSearch(relId, attrName, attrVal, op);
 
     if (recId.block == -1 || recId.slot == -1)
         return E_NOTFOUND;
