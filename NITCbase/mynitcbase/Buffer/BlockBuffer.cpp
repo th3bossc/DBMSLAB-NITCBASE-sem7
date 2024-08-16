@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
+    StaticBuffer::numCompares++;
     int diff;
     (attrType == NUMBER)
         ? diff = attr1.nVal - attr2.nVal

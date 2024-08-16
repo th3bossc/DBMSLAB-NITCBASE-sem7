@@ -30,6 +30,8 @@ class StaticBuffer {
   static int setDirtyBit(int blockNum);
   StaticBuffer();
   ~StaticBuffer();
+
+  static int numCompares;   // variable to store the number of comparisons done
 };
 
 #endif  // NITCBASE_STATICBUFFER_H

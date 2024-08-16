@@ -4,6 +4,10 @@ unsigned char StaticBuffer::blocks[BUFFER_CAPACITY][BLOCK_SIZE];
 struct BufferMetaInfo StaticBuffer::metainfo[BUFFER_CAPACITY];
 unsigned char StaticBuffer::blockAllocMap[DISK_BLOCKS];
 
+
+//modifications to print number of comparisons
+int StaticBuffer::numCompares = 0;
+
 StaticBuffer::StaticBuffer() {
 
     for (int i = 0; i < 4; i++) {

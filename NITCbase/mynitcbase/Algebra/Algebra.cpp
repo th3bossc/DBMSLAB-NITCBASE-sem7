@@ -83,6 +83,9 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
     RelCacheTable::resetSearchIndex(srcRelId);
     AttrCacheTable::resetSearchIndex(srcRelId, attr);
 
+    // modifications to print number of comparisons
+    StaticBuffer::numCompares = 0;
+
     Attribute record[src_nAtrrs];
     while(BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS) {
         int ret = BlockAccess::insert(targetRelId, record);
@@ -92,6 +95,9 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
             return ret;
         }
     }
+
+    //modifications to print number of comparisons
+    printf("Number of comparisons done: %d\n", StaticBuffer::numCompares);
 
     OpenRelTable::closeRel(targetRelId);
     return SUCCESS;
