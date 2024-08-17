@@ -187,6 +187,21 @@ int OpenRelTable::closeRel(int relId) {
         relCatBuffer.setRecord(record, RelCacheTable::relCache[relId]->recId.slot);
     }
 
+    AttrCacheEntry* attrCacheEntry = AttrCacheTable::attrCache[relId];
+    while(attrCacheEntry != NULL) {
+        if (attrCacheEntry->dirty) {
+            Attribute record[ATTRCAT_NO_ATTRS];
+
+            AttrCacheTable::attrCatEntryToRecord(&(attrCacheEntry->attrCatEntry), record);
+
+            RecBuffer attrCatBuffer(attrCacheEntry->recId.block);
+
+            attrCatBuffer.setRecord(record, attrCacheEntry->recId.slot);
+        }
+
+        attrCacheEntry = attrCacheEntry->next;
+    }
+
     OpenRelTable::tableMetaInfo[relId].free = true;
     free(RelCacheTable::relCache[relId]);
     clearList(AttrCacheTable::attrCache[relId]);

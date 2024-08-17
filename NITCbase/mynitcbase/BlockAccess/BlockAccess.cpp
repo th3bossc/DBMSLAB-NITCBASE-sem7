@@ -269,7 +269,21 @@ int BlockAccess::insert(int relId, Attribute* record) {
     relCatBuf.numRecs++;
     RelCacheTable::setRelCatEntry(relId, &relCatBuf);
 
-    return SUCCESS;
+    int flag = SUCCESS;
+
+    for (int i = 0; i < numAttrs; i++) {
+        AttrCatEntry attrCatBuf;
+        AttrCacheTable::getAttrCatEntry(relId, i, &attrCatBuf);
+        
+        int rootBlock = attrCatBuf.rootBlock;
+        if (rootBlock != -1) {
+            int ret = BPlusTree::bPlusInsert(relId, attrCatBuf.attrName, record[i], recId);
+            if (ret == E_DISKFULL)
+                flag = E_INDEX_BLOCKS_RELEASED;
+        }
+    }
+
+    return flag;
 }
 
 
@@ -390,10 +404,8 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
         }
 
 
-        // condition to handle b+ trees
-        // if (rootBlock != -1) {
-
-        // }
+        if (rootBlock != -1)
+            BPlusTree::bPlusDestroy(rootBlock);
     }
 
     HeadInfo relCatHeader;
