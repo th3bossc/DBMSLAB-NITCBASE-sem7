@@ -231,13 +231,15 @@ int BPlusTree::bPlusInsert(int relId, char attrName[ATTR_SIZE], Attribute attrVa
     int leafBlockNum = BPlusTree::findLeafToInsert(blockNum, attrVal, attrCatBuf.attrType);
 
 
-
     Index indexEntry;
     indexEntry.attrVal = attrVal;
     indexEntry.block = recId.block;
     indexEntry.slot = recId.slot;
 
+
     ret = BPlusTree::insertIntoLeaf(relId, attrName, leafBlockNum, indexEntry);
+
+
 
     if (ret == E_DISKFULL) {
         BPlusTree::bPlusDestroy(blockNum);
@@ -245,7 +247,6 @@ int BPlusTree::bPlusInsert(int relId, char attrName[ATTR_SIZE], Attribute attrVa
         AttrCacheTable::setAttrCatEntry(relId, attrName, &attrCatBuf);
         return E_DISKFULL;
     }
-
 
     return SUCCESS;
 }
@@ -287,6 +288,7 @@ int BPlusTree::findLeafToInsert(int rootBlock, Attribute attrVal, int attrType) 
         }
     }
 
+    printf("returned blockNum: %d, %d\n", blockNum, StaticBuffer::getStaticBlockType(blockNum));
     return blockNum;
 }
 
@@ -358,6 +360,7 @@ int BPlusTree::insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum,
             return E_DISKFULL;
     }
 
+    printf("insert done %s\n", indexEntry.attrVal.sVal);
     return SUCCESS;
 }
 
