@@ -132,3 +132,23 @@ int AttrCacheTable::resetSearchIndex(int relId, int attrOffset) {
     IndexId indexId = {-1, -1};
     return setSearchIndex(relId, attrOffset, &indexId);
 }
+
+int AttrCacheTable::setAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry* attrCatBuf) {
+    if (relId < 0 || relId >= MAX_OPEN)
+        return E_OUTOFBOUND;
+
+    if (attrCache[relId] == nullptr)
+        return E_RELNOTOPEN;
+
+    for (auto attrCacheEntry = attrCache[relId]; attrCacheEntry != nullptr; attrCacheEntry = attrCacheEntry->next) {
+        auto attrCatEntry = attrCacheEntry->attrCatEntry;
+        if (strcmp(attrCatEntry.attrName, attrCatBuf->attrName) == 0) {
+            *attrCatBuf = attrCatEntry;
+            attrCacheEntry->dirty = true;
+            return SUCCESS;
+        }
+    }
+
+
+    return E_ATTRNOTEXIST;
+}
