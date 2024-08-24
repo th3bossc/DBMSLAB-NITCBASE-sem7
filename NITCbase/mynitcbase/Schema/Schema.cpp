@@ -170,5 +170,10 @@ int Schema::dropIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]) {
     if (rootBlock == -1)
         return E_NOINDEX;
 
-    return BPlusTree::bPlusDestroy(rootBlock);
+    BPlusTree::bPlusDestroy(rootBlock);
+
+    attrCatBuf.rootBlock = -1;
+    AttrCacheTable::setAttrCatEntry(relId, attrName, &attrCatBuf);
+
+    return SUCCESS;
 }

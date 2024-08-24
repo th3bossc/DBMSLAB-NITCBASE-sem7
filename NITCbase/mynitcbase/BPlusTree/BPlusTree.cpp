@@ -143,7 +143,6 @@ int BPlusTree::bPlusCreate(int relId, char attrName[ATTR_SIZE]) {
     int block = relCatEntry.firstBlk;
 
     while (block != -1) {
-        printf("curr block %d\n", block);
         RecBuffer currentBlock(block);
 
         unsigned char slotMap[relCatEntry.numSlotsPerBlk];
@@ -158,7 +157,6 @@ int BPlusTree::bPlusCreate(int relId, char attrName[ATTR_SIZE]) {
 
 
             RecId recId = {block, i};
-            printf("inserting recId {%d, %d}\n", block, i);
             int ret = BPlusTree::bPlusInsert(relId, attrName, record[attrCatBuf.offset], recId);
             if (ret == E_DISKFULL)
                 return E_DISKFULL;
@@ -227,9 +225,6 @@ int BPlusTree::bPlusInsert(int relId, char attrName[ATTR_SIZE], Attribute attrVa
     if (blockNum == -1)
         return E_NOINDEX;
 
-    printf("{%d, %d}\n", recId.block, recId.slot);
-    
-
     int leafBlockNum = findLeafToInsert(blockNum, attrVal, attrCatBuf.attrType);
 
     Index entry;
@@ -271,9 +266,6 @@ int BPlusTree::findLeafToInsert(int rootBlock, Attribute attrVal, int attrType) 
                 break;
             }
         }
-
-        if (blockNum == rootBlock)
-            printf("%d\n", targetIndex);
 
         if (targetIndex == -1) {
             intBlock.getEntry(&intEntry, numEntries-1);
@@ -333,7 +325,6 @@ int BPlusTree::insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum,
     int newRightBlock = splitLeaf(blockNum, indices);
     if (newRightBlock == E_DISKFULL)
         return newRightBlock;
-    printf("making sure %d %d\n", blockNum, newRightBlock);
 
     if (leafHeader.pblock != -1) {
         InternalEntry intEntry;
@@ -395,17 +386,14 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBl
     HeadInfo intHeader;
     intBlock.getHeader(&intHeader);
 
-    printf("{ %d, %s, %d, %d} entries %d\n", intBlockNum, intEntry.attrVal.sVal, intEntry.lChild, intEntry.rChild, intHeader.numEntries);
 
     InternalEntry intEntries[intHeader.numEntries + 1];
-
-
 
     int targetIndex = intHeader.numEntries;
     InternalEntry entryBuffer;
     for (int i = 0; i < intHeader.numEntries; i++) {
         intBlock.getEntry(&entryBuffer, i);
-        if (compareAttrs(entryBuffer.attrVal, intEntry.attrVal, attrCatBuf.attrType) >= 0) {
+        if (compareAttrs(entryBuffer.attrVal, intEntry.attrVal, attrCatBuf.attrType) > 0) {
             targetIndex = i;
             break;
         }
@@ -429,9 +417,6 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBl
 
         for (int i = 0; i < intHeader.numEntries; i++)
             intBlock.setEntry(&intEntries[i], i);
-
-        printf("hello %d\n", intHeader.pblock);
-
 
         return SUCCESS;
     }
@@ -508,7 +493,6 @@ int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[]) {
 
 
 int BPlusTree::createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int lChild, int rChild) {
-    printf("hello root\n");
     AttrCatEntry attrCatBuf;
     AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatBuf);
 
